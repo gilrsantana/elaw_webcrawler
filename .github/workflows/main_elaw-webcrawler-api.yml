@@ -25,7 +25,10 @@ jobs:
         run: pwd 
 
       - name: Set working directory
-        run: cd ../../Server/
+        run: cd /home
+	  
+      - name: List directory
+        run: ls
 
       - name: Check current directory after
         run: pwd

@@ -25,7 +25,7 @@ jobs:
         run: pwd 
 
       - name: Set working directory
-        run: cd ../../../../
+        run: cd ../../
 	  
       - name: List directory
         run: ls

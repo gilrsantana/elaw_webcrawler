@@ -64,8 +64,8 @@ BenchmarkDotNet.Artifacts/
 project.lock.json
 project.fragment.lock.json
 artifacts/
-./Server/ElawWebCrawler/appsettings.Development.json
-./Server/ElawWebCrawler/appsettings.json
+Server/ElawWebCrawler.Api/appsettings.Development.json
+Server/ElawWebCrawler.Api/appsettings.json
 # Tye
 .tye/
 

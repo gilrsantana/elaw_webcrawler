@@ -21,18 +21,6 @@ jobs:
         with:
           dotnet-version: '9.x'
 
-      - name: Check current directory before
-        run: pwd 
-
-      - name: List content
-        run: ls -hal
-
-      - name: Set working directory
-        run: cd ./Server/
-
-      - name: Check current directory after
-        run: pwd
-  
       - name: Build with dotnet
         run: dotnet build ./Server/ElawWebCrawler.Api/ElawWebCrawler.Api.csproj --configuration Release
 

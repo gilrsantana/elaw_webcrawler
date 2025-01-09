@@ -25,7 +25,7 @@ jobs:
         run: pwd 
 
       - name: List content
-        run: ls
+        run: ls -hal
 
       - name: Set working directory
         run: cd ./Server/
@@ -34,10 +34,10 @@ jobs:
         run: pwd
   
       - name: Build with dotnet
-        run: dotnet build -p ./Server/ElawWebCrawler.Api/ElawWebCrawler.Api.csproj --configuration Release
+        run: dotnet build ./Server/ElawWebCrawler.Api/ElawWebCrawler.Api.csproj --configuration Release
 
       - name: dotnet publish
-        run: dotnet publish -p ./Server/ElawWebCrawler.Api/ElawWebCrawler.Api.csproj -c Release -o ${{env.DOTNET_ROOT}}/myapp
+        run: dotnet publish ./Server/ElawWebCrawler.Api/ElawWebCrawler.Api.csproj -c Release -o ${{env.DOTNET_ROOT}}/myapp
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4

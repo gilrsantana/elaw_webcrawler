@@ -1,6 +1,6 @@
-@ElawWebCrawler_HostAddress = http://localhost:5272
-
-GET {{ElawWebCrawler_HostAddress}}/weatherforecast/
-Accept: application/json
+@HostAddress = http://localhost:5272
+@placeholder=https://proxyservers.pro/proxy/list/order/updated/order_dir/desc
 
 ###
+GET {{HostAddress}}/api/WebCrawler?url={{placeholder}}
+Accept: application/json

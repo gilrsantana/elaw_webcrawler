@@ -22,13 +22,16 @@ jobs:
           dotnet-version: '9.x'
 
       - name: Check current directory before
-        run: pwd 
+        run: Run pwd 
+
+      - name: List content
+        run: Run ls
 
       - name: Set working directory
-        run: cd Server
+        run: Run cd Server
 
       - name: Check current directory after
-        run: pwd
+        run: Run pwd
   
       - name: Build with dotnet
         run: dotnet build --configuration Release

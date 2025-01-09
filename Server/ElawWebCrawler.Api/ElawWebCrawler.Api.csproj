@@ -8,6 +8,17 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ElawWebCrawler.Application\ElawWebCrawler.Application.csproj" />
+    <ProjectReference Include="..\ElawWebCrawler.Common\ElawWebCrawler.Common.csproj" />
+    <ProjectReference Include="..\ElawWebCrawler.Data\ElawWebCrawler.Data.csproj" />
+    <ProjectReference Include="..\ElawWebCrawler.Persistence\ElawWebCrawler.Persistence.csproj" />
   </ItemGroup>
 
 </Project>

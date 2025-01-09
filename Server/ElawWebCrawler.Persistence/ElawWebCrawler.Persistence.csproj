@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ElawWebCrawler.Data\ElawWebCrawler.Data.csproj" />
+    <ProjectReference Include="..\ElawWebCrawler.Domain\ElawWebCrawler.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

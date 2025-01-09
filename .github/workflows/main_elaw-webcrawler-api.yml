@@ -26,9 +26,6 @@ jobs:
 
       - name: Set working directory
         run: cd ../../
-	  
-      - name: List directory
-        run: ls
 
       - name: Check current directory after
         run: pwd

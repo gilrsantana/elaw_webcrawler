@@ -22,7 +22,7 @@ jobs:
           dotnet-version: '9.x'
 
       - name: Set working directory
-        run: cd Server
+        run: cd ../../Server
   
       - name: Build with dotnet
         run: dotnet build --configuration Release

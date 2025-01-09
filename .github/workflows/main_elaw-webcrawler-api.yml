@@ -28,7 +28,7 @@ jobs:
         run: ls
 
       - name: Set working directory
-        run: cd Server
+        run: cd ./Server/
 
       - name: Check current directory after
         run: pwd

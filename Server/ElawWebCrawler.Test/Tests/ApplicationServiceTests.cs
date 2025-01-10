@@ -1,18 +1,22 @@
 ﻿using System.Text;
 using Microsoft.Extensions.Configuration;
 using ElawWebCrawler.Application;
+using ElawWebCrawler.Application.Interfaces;
+using ElawWebCrawler.Application.Services;
 using ElawWebCrawler.Domain.Entities;
 using ElawWebCrawler.Domain.Interfaces;
 using ElawWebCrawler.Provider.Azure;
 using Moq;
+using PuppeteerSharp;
 
-namespace ElawWebCrawler.Test;
+namespace ElawWebCrawler.Test.Tests;
 
 public class ApplicationServiceTests
 {
     private readonly Mock<IGetDataEventPersist> _mockEventPersist;
     private readonly Mock<IHtmlFilePersist> _mockHtmlFilePersist;
     private readonly Mock<IAzureFileHandler> _mockAzureFileHandler;
+    private readonly Mock<IPuppeteerService> _mockPuppeteerService;
     private readonly Mock<IConfiguration> _mockConfiguration;
     private readonly ApplicationService _service;
     private const string _url = "https://proxyservers.pro/proxy/list/order/updated/order_dir/desc";
@@ -23,12 +27,13 @@ public class ApplicationServiceTests
         _mockEventPersist = new Mock<IGetDataEventPersist>();
         _mockHtmlFilePersist = new Mock<IHtmlFilePersist>();
         _mockAzureFileHandler = new Mock<IAzureFileHandler>();
-
+        _mockPuppeteerService = new Mock<IPuppeteerService>();
         _service = new ApplicationService(
             _mockEventPersist.Object,
             _mockHtmlFilePersist.Object,
             _mockAzureFileHandler.Object,
-            _mockConfiguration.Object);
+            _mockConfiguration.Object,
+            _mockPuppeteerService.Object);
     }
     
     [Fact]
@@ -48,6 +53,12 @@ public class ApplicationServiceTests
         _mockConfiguration.Setup(c => c.GetSection("MaxThreads").Value).Returns("3");
         var fileUrl = "fileUrl";
         var dataEvent = new GetDataEvent(DateTime.Now, DateTime.Now, 1, 1, "fileUrl", "requestKey");
+        var mockAddress = "127.0.0.1";
+        var mockPort = "8080";
+        var mockCountry = "US";
+        var mockProtocol = "HTTP";
+        var htmlContent = $"<html><table><tr><th>IP Address</th><th>Port</th><th>Country</th><th>Protocol</th></tr>" +
+                          $"<tr><td>{mockAddress}</td><td>{mockPort}</td><td>{mockCountry}</td><td>{mockProtocol}</td></tr></table></html>";
         _mockAzureFileHandler.Setup(a => a.UploadFileToAzureStaAsync(It.IsAny<byte[]>(), It.IsAny<string>()))
             .ReturnsAsync(fileUrl);
         _mockHtmlFilePersist.Setup(p => p.Add(It.IsAny<HtmlFile>()));
@@ -56,6 +67,9 @@ public class ApplicationServiceTests
         _mockEventPersist.Setup(e => e.Add(It.IsAny<GetDataEvent>()));
         _mockEventPersist.Setup(e => e.SaveChangesAsync()).ReturnsAsync(true);
         _mockEventPersist.Setup(e => e.GetByRequestKeyAsync(It.IsAny<string>())).ReturnsAsync([dataEvent]);
+        _mockPuppeteerService.Setup(p => p.FetchRenderedHtmlAsync(It.IsAny<string>())).ReturnsAsync(It.IsAny<string>());
+        _mockPuppeteerService.Setup(p => p.LaunchBrowserAsync()).ReturnsAsync(Mock.Of<IBrowser>());
+
         // Act
         var result = await _service.ScrapDataAsync(_url);
 
@@ -125,9 +139,7 @@ public class ApplicationServiceTests
         var mockProtocol = "HTTP";
         var htmlContent = $"<html><table><tr><th>IP Address</th><th>Port</th><th>Country</th><th>Protocol</th></tr>" +
                           $"<tr><td>{mockAddress}</td><td>{mockPort}</td><td>{mockCountry}</td><td>{mockProtocol}</td></tr></table></html>";
-        var mockHttpMessageHandler = new MockHttpMessageHandler(htmlContent);
-        var client = new HttpClient(mockHttpMessageHandler);
-        _service.SetHttpClient(client);
+        _mockPuppeteerService.Setup(p => p.FetchRenderedHtmlAsync(It.IsAny<string>())).ReturnsAsync(htmlContent);
 
         // Act
         var proxies = await _service.ExtractProxyDataAsync(_url);
@@ -138,6 +150,20 @@ public class ApplicationServiceTests
         Assert.Equal(mockPort, proxies[0].Port);
         Assert.Equal(mockCountry, proxies[0].Country);
         Assert.Equal(mockProtocol, proxies[0].Protocol);
+    }
+    
+    [Fact]
+    public async Task FetchRenderedHtmlAsync_ShouldReturnHtmlContent()
+    {
+        // Arrange
+        var htmlContent = "<html><table><tr><th>IP Address</th><th>Port</th><th>Country</th><th>Protocol</th></tr></table></html>";
+        _mockPuppeteerService.Setup(p => p.FetchRenderedHtmlAsync(It.IsAny<string>())).ReturnsAsync(htmlContent);
+
+        // Act
+        var content = await _service.FetchRenderedHtmlAsync(_url);
+
+        // Assert
+        Assert.Contains("<table>", content);
     }
 
     [Fact]

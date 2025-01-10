@@ -164,3 +164,7 @@ Accept: application/json
 ```
 
 **Observação:** Eventualmente, a API pode estar desativada por razões de gerenciamento de custo no Azure. Se precisar que o Web App seja ativado, favor entar em contato.
+
+## GitHub Actions
+
+O repositório do projeto está configurado para que os commits realizados na branch principal iniciem automaticamente o processo de build e publicação do projeto no Azure.

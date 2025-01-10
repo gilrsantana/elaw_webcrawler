@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using System.Text;
 using ElawWebCrawler.Application.Notifications;
 using ElawWebCrawler.Common;
@@ -10,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 
 
+[assembly: InternalsVisibleTo("ElawWebCrawler.Test")]
 namespace ElawWebCrawler.Application;
 
 public class ApplicationService(IGetDataEventPersist eventPersist, 
@@ -37,7 +39,6 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
         }
         semaphore = new SemaphoreSlim(_maxThreads);
         
-        var container = new DataContainer<GetDataEventNotification>();
         if (string.IsNullOrEmpty(url))
         {
             return HandleResult<GetDataEventNotification>(null, ["URL inválida."]);
@@ -104,7 +105,7 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
         return HandleResult(notification);
     }
     
-    private async Task<GetDataEventNotification> BuildNotificationAsync(GetDataEvent dataEvent)
+    internal async Task<GetDataEventNotification> BuildNotificationAsync(GetDataEvent dataEvent)
     {
         var pages = await htmlFilePersist.GetByRequestKeyAsync(dataEvent.RequestKey);
         var pagesNotification = pages.Select(p => new HtmlFileNotification(p.FileUrl, p.FileContentAddress)).ToArray();
@@ -119,7 +120,7 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
             pagesNotification);
     }
     
-    private async Task<GetDataEvent?> StoreDataEventAsync(DateTime startTime, int pagesCount, int rowsCount, string requestKey)
+    internal async Task<GetDataEvent?> StoreDataEventAsync(DateTime startTime, int pagesCount, int rowsCount, string requestKey)
     {
         var endTime = DateTime.Now;
         var fileUrl = await SaveDataToAzure(ProxyList.ToList());
@@ -127,13 +128,13 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
         return await StoreDataEventToDatabaseAsync(dataEvent);
     }
     
-    private async Task<GetDataEvent?> StoreDataEventToDatabaseAsync(GetDataEvent dataEvent)
+    internal async Task<GetDataEvent?> StoreDataEventToDatabaseAsync(GetDataEvent dataEvent)
     {
         eventPersist.Add(dataEvent);
         return await eventPersist.SaveChangesAsync() ? dataEvent : null;
     }
 
-    private async Task<List<ProxyData>> ExtractProxyDataAsync(string url)
+    internal async Task<List<ProxyData>> ExtractProxyDataAsync(string url)
     {
         var response = await client.GetStringAsync(url);
         var doc = new HtmlDocument();
@@ -190,7 +191,7 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
         return dict;
     }
 
-    private async Task SaveHtmlToFileAsync(string url, string htmlContent, string requestKey)
+    internal async Task SaveHtmlToFileAsync(string url, string htmlContent, string requestKey)
     {
         var fileName = $"page_{url.GetHashCode()}.html";
         var fileBytesArray = Encoding.UTF8.GetBytes(htmlContent);
@@ -200,18 +201,23 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
         await SaveHtmlToDatabaseAsync(entity);
     }
     
-    private async Task SaveHtmlToDatabaseAsync(HtmlFile entity)
+    internal async Task SaveHtmlToDatabaseAsync(HtmlFile entity)
     {
         htmlFilePersist.Add(entity);
         await htmlFilePersist.SaveChangesAsync();
     }
     
-    private async Task<string> SaveDataToAzure(List<ProxyData> data)
+    internal async Task<string> SaveDataToAzure(List<ProxyData> data)
     {
         var json = JsonConvert.SerializeObject(data, Formatting.Indented);
         var fileName = $"{_jsonFileFolder}/proxies_{Guid.NewGuid().ToString()}.json";
         var fileBytesArray = Encoding.UTF8.GetBytes(json);
         var fileUrl = await azureFileHandler.UploadFileToAzureStaAsync(fileBytesArray, fileName);
         return fileUrl;
+    }
+    
+    internal void SetHttpClient(HttpClient httpClient)
+    {
+        client = httpClient;
     }
 }

@@ -131,6 +131,12 @@ A API traz como resposta os dados da requisição e os endereços para download 
 }
 ```
 
+Estruturalmente, o objeto retornado pela API possui duas propriedades: **viewData** e **messages**. 
+
+**ViewData** é um objeto genérico que traz o conteúdo da requisição em caso de sucesso. 
+
+Já a propriedade **messages** traz um array com objeto de erro que possui as propriedades **message** (string) com o texto do erro na requisição e **type** (string) com o tipo do erro, podendo ser: **INFORMATION**, **WARNING**, **ERROR** e **CRITICAL_ERROR**
+
 ## Pacotes utilizados no projeto
 
 ```
@@ -146,8 +152,6 @@ A API traz como resposta os dados da requisição e os endereços para download 
 <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
 <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.0" />
 <PackageReference Include="Azure.Storage.Blobs" Version="12.23.0" />
-<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.0" />
-<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.0" />
 ```
 
 ## API Publicada

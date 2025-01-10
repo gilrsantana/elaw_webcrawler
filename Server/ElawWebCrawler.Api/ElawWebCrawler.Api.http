@@ -1,6 +1,7 @@
 @HostAddress = http://localhost:5272
+@HostAzure=elaw-webcrawler-api.azurewebsites.net
 @placeholder=https://proxyservers.pro/proxy/list/order/updated/order_dir/desc
 
 ###
-GET {{HostAddress}}/api/WebCrawler?url={{placeholder}}
+GET {{HostAzure}}/api/WebCrawler?url={{placeholder}}
 Accept: application/json

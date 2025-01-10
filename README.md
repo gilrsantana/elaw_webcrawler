@@ -16,23 +16,24 @@ Criar ferramenta para extração dos dados de website (Webcrawler).
 ## Estratégias utilizadas no projeto
 
 <ol>
-<li>Separação dos projetos em bibliotecas de classe de acordo com cada funcionalidade
-    <ul>
-        <li><b>ElawWebCrawler.Common:</b> Definições comuns de cross-connect do projeto</li>
-        <li><b>ElawWebCrawler.Domain:</b> Definições das entidades de domínio</li>
-        <li><b>ElawWebCrawler.Data:</b> Definições de contexto e mapeamento das entidades do projeto</li>
-        <li><b>ElawWebCrawler.Persistence:</b> Definições dos repositórios das entidades do projeto</li>
-        <li><b>ElawWebCrawler.Provider:</b> Definições dos provedores externos, no caso, Azure, para armazenar os arquivos num Storage Account</li>
-        <li><b>ElawWebCrawler.Application:</b> Definições de execução das ações de orquestração do negócio</li>
-        <li><b>ElawWebCrawler.Api:</b> Definições das interfaces para conexão externa da api do projeto</li>
-        <li><b>ElawWebCrawler.Test:</b> Projeto de teste para a classe principal do projeto de Application</li>
-    </ul>
-</li><br>
-<li>Utilização do Serilog como ferramenta de log da aplicação, armazenando os dados em banco de dados SQL Server</li><br>
-<li>Utilização do ORM Entity Framework para gerenciamento da comunicação entre API e Banco de Dados</li><br>
-<li>Utilização do recurso de Storage Accounts do Azure como ferramenta para armazenamento dos arquivos definidos no escopo do projeto</li><br>
-<li>Validação da qualidade de código com testes unitários para a classe principal do projeto de Application</li><br>
-<li>Utilização da classe **SemaphoreSlim** como estratégia simplificada de controle de threads</li><br>
+    <li>Separação dos projetos em bibliotecas de classe de acordo com cada funcionalidade
+        <ul>
+            <li><b>ElawWebCrawler.Common:</b> Definições comuns de cross-connect do projeto</li>
+            <li><b>ElawWebCrawler.Domain:</b> Definições das entidades de domínio</li>
+            <li><b>ElawWebCrawler.Data:</b> Definições de contexto e mapeamento das entidades do projeto</li>
+            <li><b>ElawWebCrawler.Persistence:</b> Definições dos repositórios das entidades do projeto</li>
+            <li><b>ElawWebCrawler.Provider:</b> Definições dos provedores externos, no caso, Azure, para armazenar os arquivos num Storage Account</li>
+            <li><b>ElawWebCrawler.Application:</b> Definições de execução das ações de orquestração do negócio</li>
+            <li><b>ElawWebCrawler.Api:</b> Definições das interfaces para conexão externa da api do projeto</li>
+            <li><b>ElawWebCrawler.Test:</b> Projeto de teste para a classe principal do projeto de Application</li>
+        </ul>
+    </li><br>
+    <li>Utilização do Serilog como ferramenta de log da aplicação, armazenando os dados em banco de dados SQL Server</li><br>
+    <li>Utilização do ORM Entity Framework para gerenciamento da comunicação entre API e Banco de Dados</li><br>
+    <li>Utilização do recurso de Storage Accounts do Azure como ferramenta para armazenamento dos arquivos definidos no escopo do projeto</li><br>
+    <li>Validação da qualidade de código com testes unitários para a classe principal do projeto de Application</li><br>
+    <li>Utilização da classe <b>SemaphoreSlim</b> como estratégia simplificada de controle do número de threads</li><br>
+    <li>Utilização da classe <b>ConcurrentBag< T ></></b> como estratégia <b>thread-safe</b> para gerenciar a lista que coleta os dados trabalhados em diferentes threads</li><br>
 </ol>
 
 ## Como executar o projeto BackEnd

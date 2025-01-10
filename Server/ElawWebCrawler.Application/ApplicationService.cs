@@ -1,7 +1,9 @@
 ﻿using System.Collections.Concurrent;
+using System.Text;
 using ElawWebCrawler.Common;
 using ElawWebCrawler.Domain.Entities;
 using ElawWebCrawler.Domain.Interfaces;
+using ElawWebCrawler.Provider.Azure;
 using HtmlAgilityPack;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
@@ -9,16 +11,21 @@ using Newtonsoft.Json;
 
 namespace ElawWebCrawler.Application;
 
-public class ApplicationService(IGetDataEventPersist persist, IConfiguration configuration) : BaseService, IApplicationService
+public class ApplicationService(IGetDataEventPersist eventPersist, 
+    IHtmlFilePersist htmlFilePersist,
+    IAzureFileHandler azureFileHandler, 
+    IConfiguration configuration) 
+    : BaseService, IApplicationService
 {
     private static readonly ConcurrentBag<ProxyData> ProxyList = new ConcurrentBag<ProxyData>();
     private HttpClient client = new HttpClient();
-    private int _maxThreads = 3;
     private SemaphoreSlim semaphore;
+    private int _maxThreads = 3;
     private readonly string _ipKey = "IP Address";
     private readonly string _portKey = "Port";
     private readonly string _countryKey = "Country";
     private readonly string _protocolKey = "Protocol";
+    private readonly string _htmlFileFolder = "html-files";
     public async Task<DataContainer<GetDataEventNotification>> ScrapDataAsync(string url)
     {
         var maxThreads = configuration.GetSection("MaxThreads").Value ?? "";
@@ -68,7 +75,7 @@ public class ApplicationService(IGetDataEventPersist persist, IConfiguration con
                     pagesCount++;
                     rowsCount += proxies.Count;
 
-                    SaveHtmlToFileAsync(urlForm, await client.GetStringAsync(urlForm));
+                    await SaveHtmlToFileAsync(urlForm, await client.GetStringAsync(urlForm));
                 }
                 catch (Exception ex)
                 {
@@ -92,8 +99,8 @@ public class ApplicationService(IGetDataEventPersist persist, IConfiguration con
         SaveDataToJson(jsonFilePath, ProxyList.ToList());
 
         var dataEvent = new GetDataEvent(startTime, endTime, pagesCount, rowsCount, JsonConvert.SerializeObject(ProxyList));
-        persist.Add(dataEvent);
-        if (!await persist.SaveChangesAsync())
+        eventPersist.Add(dataEvent);
+        if (!await eventPersist.SaveChangesAsync())
         {
             return HandleResult<GetDataEventNotification>(null, ["Erro ao salvar os dados no banco de dados."]);
         }
@@ -157,14 +164,23 @@ public class ApplicationService(IGetDataEventPersist persist, IConfiguration con
         }
         return dict;
     }
-    
 
-    private void SaveHtmlToFileAsync(string url, string htmlContent)
+    private async Task SaveHtmlToFileAsync(string url, string htmlContent)
     {
         var fileName = $"page_{url.GetHashCode()}.html";
-        File.WriteAllTextAsync(fileName, htmlContent);
+        var fileBytesArray = Encoding.UTF8.GetBytes(htmlContent);
+        var fileUrl = await azureFileHandler.UploadFileToAzureStaAsync(fileBytesArray, $"{_htmlFileFolder}/{fileName}");
+        var entity = new HtmlFile(fileName, fileUrl, url);
+        
+        await SaveHtmlToDatabaseAsync(entity);
     }
-
+    
+    private async Task SaveHtmlToDatabaseAsync(HtmlFile entity)
+    {
+        htmlFilePersist.Add(entity);
+        await htmlFilePersist.SaveChangesAsync();
+    }
+    
     private void SaveDataToJson(string filePath, List<ProxyData> data)
     {
         var json = JsonConvert.SerializeObject(data, Formatting.Indented);

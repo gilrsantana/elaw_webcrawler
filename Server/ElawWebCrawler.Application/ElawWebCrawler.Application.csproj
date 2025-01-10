@@ -9,6 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="..\ElawWebCrawler.Common\ElawWebCrawler.Common.csproj" />
     <ProjectReference Include="..\ElawWebCrawler.Domain\ElawWebCrawler.Domain.csproj" />
+    <ProjectReference Include="..\ElawWebCrawler.Provider\ElawWebCrawler.Provider.csproj" />
   </ItemGroup>
 
   <ItemGroup>

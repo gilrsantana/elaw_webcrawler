@@ -22,6 +22,11 @@ internal class GetDataEventPersist(WebCrawlerContext context) : IGetDataEventPer
         return await context.GetDataEvents.ToListAsync();
     }
 
+    public async Task<IEnumerable<GetDataEvent>> GetByRequestKeyAsync(string requestKey)
+    {
+        return await context.GetDataEvents.Where(x => x.RequestKey == requestKey).ToListAsync();
+    }
+
     public async Task<GetDataEvent?> GetByIdAsync(string id)
     {
         return await context.GetDataEvents.FirstOrDefaultAsync(x => x.Id == id);

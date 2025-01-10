@@ -63,6 +63,10 @@ public class WebCrawlerContext : DbContext
                 .HasColumnType("varchar")
                 .HasMaxLength(250)
                 .IsRequired();
+            h.Property(x => x.RequestKey)
+                .HasColumnType("varchar")
+                .HasMaxLength(36)
+                .IsRequired();
             h.Property(x => x.CreatedAt)
                 .HasColumnType("datetime")
                 .IsRequired();

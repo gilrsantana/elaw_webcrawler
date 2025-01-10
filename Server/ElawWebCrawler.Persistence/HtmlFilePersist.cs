@@ -22,6 +22,11 @@ public class HtmlFilePersist(WebCrawlerContext context) : IHtmlFilePersist
         return await context.HtmlFiles.ToListAsync();
     }
 
+    public async Task<IEnumerable<HtmlFile>> GetByRequestKeyAsync(string requestKey)
+    {
+        return await context.HtmlFiles.Where(x => x.RequestKey == requestKey).ToListAsync();
+    }
+
     public async Task<HtmlFile?> GetByIdAsync(string id)
     {
         return await context.HtmlFiles.FirstOrDefaultAsync(x => x.Id == id);

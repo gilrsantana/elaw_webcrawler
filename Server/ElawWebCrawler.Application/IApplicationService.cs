@@ -1,4 +1,5 @@
-﻿using ElawWebCrawler.Common;
+﻿using ElawWebCrawler.Application.Notifications;
+using ElawWebCrawler.Common;
 
 namespace ElawWebCrawler.Application;
 

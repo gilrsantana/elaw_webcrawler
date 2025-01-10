@@ -24,11 +24,15 @@ public class WebCrawlerController(ILogger<WebCrawlerController> logger, IApplica
                 result.Data.StartTime,
                 result.Data.EndTime,
                 result.Data.PagesCount,
-                result.Data.RowsCount);
+                result.Data.RowsCount,
+                result.Data.RequestKey,
+                result.Data.DataUrlFile,
+                result.Data.PagesUrl.Select(p => new HtmFileViewModel(p.FileUrl, p.FileContentAddress)).ToArray());
             return Ok(new ResultViewModelApi<WebCrawlerViewModel>(viewModel));
         }
         catch (Exception ex)
         {
+            
             return HandleException(
                 new ExceptionModel(
                     "PTP054P",

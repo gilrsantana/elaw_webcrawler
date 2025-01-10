@@ -4,6 +4,7 @@ using ElawWebCrawler.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ElawWebCrawler.Data.Migrations
 {
     [DbContext(typeof(WebCrawlerContext))]
-    partial class WebCrawlerContextModelSnapshot : ModelSnapshot
+    [Migration("20250110112533_add_request_key")]
+    partial class add_request_key
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

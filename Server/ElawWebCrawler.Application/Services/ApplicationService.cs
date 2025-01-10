@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Text;
+using ElawWebCrawler.Application.Interfaces;
 using ElawWebCrawler.Application.Notifications;
 using ElawWebCrawler.Common;
 using ElawWebCrawler.Domain.Entities;
@@ -10,18 +11,18 @@ using HtmlAgilityPack;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 
-
 [assembly: InternalsVisibleTo("ElawWebCrawler.Test")]
-namespace ElawWebCrawler.Application;
+namespace ElawWebCrawler.Application.Services;
 
 public class ApplicationService(IGetDataEventPersist eventPersist, 
     IHtmlFilePersist htmlFilePersist,
     IAzureFileHandler azureFileHandler, 
-    IConfiguration configuration) 
+    IConfiguration configuration,
+    IPuppeteerService puppeteerService) 
     : BaseService, IApplicationService
 {
+    private HttpClient client;
     private static readonly ConcurrentBag<ProxyData> ProxyList = new ConcurrentBag<ProxyData>();
-    private HttpClient client = new HttpClient();
     private SemaphoreSlim semaphore;
     private int _maxThreads = 3;
     private readonly string _ipKey = "IP Address";
@@ -35,7 +36,7 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
         var maxThreads = configuration.GetSection("MaxThreads").Value ?? "";
         if (int.TryParse(maxThreads, out var number))
         {
-            _maxThreads = number;
+            _maxThreads = number > 0 ? number : _maxThreads;
         }
         semaphore = new SemaphoreSlim(_maxThreads);
         
@@ -78,7 +79,7 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
                     pagesCount++;
                     rowsCount += proxies.Count;
 
-                    await SaveHtmlToFileAsync(urlForm, await client.GetStringAsync(urlForm), requestKey);
+                    await SaveHtmlToFileAsync(urlForm, await FetchRenderedHtmlAsync(urlForm), requestKey);
                 }
                 catch (Exception ex)
                 {
@@ -136,7 +137,9 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
 
     internal async Task<List<ProxyData>> ExtractProxyDataAsync(string url)
     {
-        var response = await client.GetStringAsync(url);
+        var response = await FetchRenderedHtmlAsync(url);
+        if (string.IsNullOrEmpty(response))
+            return [];
         var doc = new HtmlDocument();
         doc.LoadHtml(response);
 
@@ -164,6 +167,11 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
         }
 
         return proxies;
+    }
+    
+    internal async Task<string> FetchRenderedHtmlAsync(string url)
+    {
+        return await puppeteerService.FetchRenderedHtmlAsync(url) ?? "";
     }
 
     private Dictionary<string, int> GetIndexes(HtmlNode node)
@@ -216,7 +224,7 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
         return fileUrl;
     }
     
-    internal void SetHttpClient(HttpClient httpClient)
+    public void SetHttpClient(HttpClient httpClient)
     {
         client = httpClient;
     }

@@ -1,7 +1,7 @@
 ﻿using ElawWebCrawler.Application.Notifications;
 using ElawWebCrawler.Common;
 
-namespace ElawWebCrawler.Application;
+namespace ElawWebCrawler.Application.Interfaces;
 
 public interface IApplicationService
 {

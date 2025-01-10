@@ -1,6 +1,6 @@
 ﻿using ElawWebCrawler.Common;
 
-namespace ElawWebCrawler.Application;
+namespace ElawWebCrawler.Application.Services;
 
 public class BaseService
 {

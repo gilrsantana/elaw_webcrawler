@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using ElawWebCrawler.Api.ExceptionHandler;
 using ElawWebCrawler.Api.Notifications;
-using ElawWebCrawler.Application;
+using ElawWebCrawler.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ElawWebCrawler.Api.Controllers;

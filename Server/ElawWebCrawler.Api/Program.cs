@@ -10,4 +10,5 @@ builder.Services.ConfigureApiApplication();
 builder.Services.ConfigureApiData(builder.Configuration);
 builder.Services.ConfigureApiPersistence();
 builder.Services.ConfigureAzureProvider();
+builder.Services.ConfigureSerilog(builder);
 builder.Services.LoadConfiguration(builder.Build());

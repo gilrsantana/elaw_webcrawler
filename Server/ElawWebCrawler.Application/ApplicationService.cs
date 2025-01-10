@@ -26,6 +26,7 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
     private readonly string _countryKey = "Country";
     private readonly string _protocolKey = "Protocol";
     private readonly string _htmlFileFolder = "html-files";
+    private readonly string _jsonFileFolder = "json-files";
     public async Task<DataContainer<GetDataEventNotification>> ScrapDataAsync(string url)
     {
         var maxThreads = configuration.GetSection("MaxThreads").Value ?? "";
@@ -95,10 +96,9 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
         await Task.WhenAll(tasks);
         
         var endTime = DateTime.Now;
-        var jsonFilePath = "proxies.json";
-        SaveDataToJson(jsonFilePath, ProxyList.ToList());
+        var fileUrl = await SaveDataToAzure(ProxyList.ToList());
 
-        var dataEvent = new GetDataEvent(startTime, endTime, pagesCount, rowsCount, JsonConvert.SerializeObject(ProxyList));
+        var dataEvent = new GetDataEvent(startTime, endTime, pagesCount, rowsCount, fileUrl);
         eventPersist.Add(dataEvent);
         if (!await eventPersist.SaveChangesAsync())
         {
@@ -181,9 +181,12 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
         await htmlFilePersist.SaveChangesAsync();
     }
     
-    private void SaveDataToJson(string filePath, List<ProxyData> data)
+    private async Task<string> SaveDataToAzure(List<ProxyData> data)
     {
         var json = JsonConvert.SerializeObject(data, Formatting.Indented);
-        File.WriteAllText(filePath, json);
+        var fileName = $"{_jsonFileFolder}/proxies_{Guid.NewGuid().ToString()}.json";
+        var fileBytesArray = Encoding.UTF8.GetBytes(json);
+        var fileUrl = await azureFileHandler.UploadFileToAzureStaAsync(fileBytesArray, fileName);
+        return fileUrl;
     }
 }

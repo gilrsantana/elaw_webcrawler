@@ -172,3 +172,11 @@ Accept: application/json
 ## GitHub Actions
 
 O repositório do projeto está configurado para que os commits realizados na branch principal iniciem automaticamente o processo de build e publicação do projeto no Azure.
+
+## Cliente FrontEnd - Angular
+
+Para melhor interação com a API, foi criado um website utilizando o framework Angular na versão 19. Este Projeto faz as requisições para a API e obtem os dados de resposta em tela. 
+
+Com ele, é possível, além de ver os dados da consulta, baixar os arquivos, tanto o json com os dados como as páginas html consultadas.
+
+![Visão da Página](./web-page.png)

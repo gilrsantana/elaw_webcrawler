@@ -13,6 +13,22 @@ Criar ferramenta para extração dos dados de website (Webcrawler).
 <li>Necessário que o webcrawler seja multithread, com máximo de 3 execuções simultâneas.</li>
 </ol>
 
+## Idealização do Projeto
+
+![Diagrama](./Elaw-Webcrawler.png)
+
+O diagrama acima mostra a idealização do projeto.
+
+Foram separados contextos para separar as responsabilidades de cada ação.
+
+O **Frontend Angular** exibe uma interface amigável para realizar e visualizar os dados da requisição com ações para baixar os arquivos json e html.
+
+O **Backend .Net** faz toda a orquestração de busca de dados no site proxyservers e tratamento dos dados para armazenamento e resposta para o cliente.
+
+O **Azure SQL Database** armazena os dados das requisições e os links onde estão armazenados no **Storage Account**.
+
+O **Azure Storage Account** armazena os arquivos **html** das páginas consultadas e os arquivos **json** com os dados da consulta.
+
 ## Estratégias utilizadas no projeto
 
 <ol>
@@ -147,7 +163,7 @@ Já a propriedade **messages** traz um array com objeto de erro que possui as pr
 <PackageReference Include="Serilog.Sinks.MSSqlServer" Version="8.1.0" />
 <PackageReference Include="HtmlAgilityPack" Version="1.11.72" />
 <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.0" />
-<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.0" />
+<PackageReference Include="PuppeteerSharp" Version="20.0.5" />
 <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
 <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.0" />

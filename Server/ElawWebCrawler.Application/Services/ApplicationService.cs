@@ -63,7 +63,7 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
                 try
                 {
                     var proxies = await ExtractProxyDataAsync(urlForm);
-
+                    Console.WriteLine($"Processado: {urlForm}");
                     if (proxies.Count == 0)
                     {
                         morePages = false;

@@ -18,7 +18,7 @@ public class WebCrawlerController(ILogger<WebCrawlerController> logger, IApplica
         {
             var result = await service.ScrapDataAsync(url);
             if (result.Messages.Count > 0 || result.Data is null)
-                return BadRequest(result);
+                return BadRequest(new {viewData = result.Data, messages = result.Messages});
             var viewModel = new WebCrawlerViewModel(
                 result.Data.Id, 
                 result.Data.StartTime,

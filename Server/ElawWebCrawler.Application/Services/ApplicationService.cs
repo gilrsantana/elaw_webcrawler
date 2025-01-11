@@ -21,9 +21,8 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
     IPuppeteerService puppeteerService) 
     : BaseService, IApplicationService
 {
-    private HttpClient client;
     private static readonly ConcurrentBag<ProxyData> ProxyList = new ConcurrentBag<ProxyData>();
-    private SemaphoreSlim semaphore;
+    private SemaphoreSlim? semaphore;
     private int _maxThreads = 3;
     private readonly string _ipKey = "IP Address";
     private readonly string _portKey = "Port";
@@ -39,8 +38,8 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
             _maxThreads = number > 0 ? number : _maxThreads;
         }
         semaphore = new SemaphoreSlim(_maxThreads);
-        
-        if (string.IsNullOrEmpty(url))
+
+        if (!IsValidUrl(url))
         {
             return HandleResult<GetDataEventNotification>(null, ["URL inválida."]);
         }
@@ -105,7 +104,17 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
         var notification = await BuildNotificationAsync(result);
         return HandleResult(notification);
     }
-    
+
+    private bool IsValidUrl(string url)
+    {
+        if (Uri.TryCreate(url, UriKind.Absolute, out var uriResult))
+        {
+            return uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps;
+        }
+        return false;
+    }
+
+
     internal async Task<GetDataEventNotification> BuildNotificationAsync(GetDataEvent dataEvent)
     {
         var pages = await htmlFilePersist.GetByRequestKeyAsync(dataEvent.RequestKey);
@@ -201,7 +210,7 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
 
     internal async Task SaveHtmlToFileAsync(string url, string htmlContent, string requestKey)
     {
-        var fileName = $"page_{url.GetHashCode()}.html";
+        var fileName = $"page_{Guid.NewGuid()}.html";
         var fileBytesArray = Encoding.UTF8.GetBytes(htmlContent);
         var fileUrl = await azureFileHandler.UploadFileToAzureStaAsync(fileBytesArray, $"{_htmlFileFolder}/{fileName}");
         var entity = new HtmlFile(fileName, fileUrl, url, requestKey);
@@ -222,10 +231,5 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
         var fileBytesArray = Encoding.UTF8.GetBytes(json);
         var fileUrl = await azureFileHandler.UploadFileToAzureStaAsync(fileBytesArray, fileName);
         return fileUrl;
-    }
-    
-    public void SetHttpClient(HttpClient httpClient)
-    {
-        client = httpClient;
     }
 }

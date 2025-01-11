@@ -25,8 +25,4 @@
     <ProjectReference Include="..\ElawWebCrawler.Provider\ElawWebCrawler.Provider.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="wwwroot\" />
-  </ItemGroup>
-
 </Project>

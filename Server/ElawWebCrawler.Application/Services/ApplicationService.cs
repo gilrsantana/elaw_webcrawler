@@ -14,11 +14,11 @@ using Newtonsoft.Json;
 [assembly: InternalsVisibleTo("ElawWebCrawler.Test")]
 namespace ElawWebCrawler.Application.Services;
 
-public class ApplicationService(IGetDataEventPersist eventPersist, 
+public class ApplicationService(IGetDataEventPersist eventPersist,
     IHtmlFilePersist htmlFilePersist,
-    IAzureFileHandler azureFileHandler, 
+    IAzureFileHandler azureFileHandler,
     IConfiguration configuration,
-    IPuppeteerService puppeteerService) 
+    IPuppeteerService puppeteerService)
     : BaseService, IApplicationService
 {
     private static readonly ConcurrentBag<ProxyData> ProxyList = new ConcurrentBag<ProxyData>();
@@ -46,10 +46,10 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
         var startTime = DateTime.Now;
         var pagesCount = 0;
         var rowsCount = 0;
-        
+
         var tasks = new List<Task>();
-        
-        var pageNumber = 1; 
+
+        var pageNumber = 1;
         var morePages = true;
         var requestKey = Guid.NewGuid().ToString();
 
@@ -69,7 +69,7 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
                         morePages = false;
                         return;
                     }
-                    
+
                     foreach (var proxy in proxies)
                     {
                         ProxyList.Add(proxy);
@@ -83,6 +83,7 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Erro ao processar {urlForm}: {ex.Message}");
+                    throw new Exception($"Erro ao processar {urlForm}");
                 }
                 finally
                 {
@@ -94,7 +95,7 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
             await Task.WhenAny(tasks);
             tasks.RemoveAll(t => t.IsCompleted);
         }
-        
+
         await Task.WhenAll(tasks);
         var result = await StoreDataEventAsync(startTime, pagesCount, rowsCount, requestKey);
         if (result is null)
@@ -120,16 +121,16 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
         var pages = await htmlFilePersist.GetByRequestKeyAsync(dataEvent.RequestKey);
         var pagesNotification = pages.Select(p => new HtmlFileNotification(p.FileUrl, p.FileContentAddress)).ToArray();
         return new GetDataEventNotification(
-            dataEvent.Id, 
-            dataEvent.StartTime, 
-            dataEvent.EndTime, 
-            dataEvent.PagesCount, 
-            dataEvent.RowsCount, 
-            dataEvent.RequestKey, 
-            dataEvent.JsonFile, 
+            dataEvent.Id,
+            dataEvent.StartTime,
+            dataEvent.EndTime,
+            dataEvent.PagesCount,
+            dataEvent.RowsCount,
+            dataEvent.RequestKey,
+            dataEvent.JsonFile,
             pagesNotification);
     }
-    
+
     internal async Task<GetDataEvent?> StoreDataEventAsync(DateTime startTime, int pagesCount, int rowsCount, string requestKey)
     {
         var endTime = DateTime.Now;
@@ -137,7 +138,7 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
         var dataEvent = new GetDataEvent(startTime, endTime, pagesCount, rowsCount, fileUrl, requestKey);
         return await StoreDataEventToDatabaseAsync(dataEvent);
     }
-    
+
     internal async Task<GetDataEvent?> StoreDataEventToDatabaseAsync(GetDataEvent dataEvent)
     {
         eventPersist.Add(dataEvent);
@@ -155,7 +156,7 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
         var rows = doc.DocumentNode.SelectNodes("//table//tr");
         if (rows == null || rows.Count < 2)
             return [];
-        
+
         var indexes = GetIndexes(rows[0]);
         rows.RemoveAt(0);
         var proxies = new List<ProxyData>();
@@ -164,7 +165,7 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
         {
             var columns = row.SelectNodes("td");
             if (columns == null) continue;
-            
+
             var proxy = new ProxyData
             (
                 columns[indexes[_ipKey]].InnerText.Trim(),
@@ -177,7 +178,7 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
 
         return proxies;
     }
-    
+
     internal async Task<string> FetchRenderedHtmlAsync(string url)
     {
         return await puppeteerService.FetchRenderedHtmlAsync(url) ?? "";
@@ -187,7 +188,7 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
     {
         var dict = new Dictionary<string, int>();
         var columns = node.SelectNodes("th");
-        
+
         var keyMap = new Dictionary<string, string>
         {
             { _ipKey, _ipKey },
@@ -214,16 +215,16 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
         var fileBytesArray = Encoding.UTF8.GetBytes(htmlContent);
         var fileUrl = await azureFileHandler.UploadFileToAzureStaAsync(fileBytesArray, $"{_htmlFileFolder}/{fileName}");
         var entity = new HtmlFile(fileName, fileUrl, url, requestKey);
-        
+
         await SaveHtmlToDatabaseAsync(entity);
     }
-    
+
     internal async Task SaveHtmlToDatabaseAsync(HtmlFile entity)
     {
         htmlFilePersist.Add(entity);
         await htmlFilePersist.SaveChangesAsync();
     }
-    
+
     internal async Task<string> SaveDataToAzure(List<ProxyData> data)
     {
         var json = JsonConvert.SerializeObject(data, Formatting.Indented);

@@ -3,5 +3,10 @@
 @placeholder=https://proxyservers.pro/proxy/list/order/updated/order_dir/desc
 
 ###
-GET {{HostAzure}}/api/WebCrawler?url={{placeholder}}
+GET {{HostAddress}}/api/WebCrawler?url={{placeholder}}
+Accept: application/json
+Timeout: 120000
+
+###
+GET {{HostAddress}}/api/Test
 Accept: application/json

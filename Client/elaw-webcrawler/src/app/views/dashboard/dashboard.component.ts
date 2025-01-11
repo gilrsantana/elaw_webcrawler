@@ -5,7 +5,10 @@ import { Proxy } from '../../models/entities/proxy';
 import { WebcrawlerService } from '../../services/webcrawler.service';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { ToastrService } from 'ngx-toastr';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { catchError, tap } from 'rxjs';
+import { ResponseApi } from '../../models/api/response-api';
+import { MessageModel } from '../../models/api/message-model';
 
 @Component({
   selector: 'app-dashboard',
@@ -26,22 +29,27 @@ export class DashboardComponent {
 
   search() {
     this.spinner.show();
-    this.service.getProxies(this.sourceAddress).subscribe(
-      (response) => {
+    this.service.getProxies(this.sourceAddress).pipe(
+      tap((response: ResponseApi) => {
         if (response.viewData) {
           this.proxie = response.viewData;
-        }
-      },
-      (error) => {
-        error.error.messages.forEach((message: any) => {
-          this.toastr.error(message.text);
+        } 
+      }),
+        catchError((error: HttpErrorResponse) => {
+          this.spinner.hide();
+          if(error.status == 0) 
+            this.toastr.error(error.message);
+          else if(error.error.messages)
+            error.error.messages.forEach((message: MessageModel) => {
+              this.toastr.error(message.text);
+            });
+          else
+            this.toastr.error('Erro ao buscar os dados.');
+          return [];
         })
+      ).subscribe(() => {
         this.spinner.hide();
-      },
-      () => {
-        this.spinner.hide();
-      }
-    );
+      } )
   }
 
   download(address: string) {

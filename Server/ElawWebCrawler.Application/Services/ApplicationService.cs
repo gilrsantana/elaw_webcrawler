@@ -48,15 +48,18 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
         var rowsCount = 0;
 
         var tasks = new List<Task>();
+        var cancellationTokenSource = new CancellationTokenSource();
 
         var pageNumber = 1;
         var morePages = true;
         var requestKey = Guid.NewGuid().ToString();
+        var errorOccurred = false; 
 
         while (morePages)
         {
             var urlForm = $"{url}/page/{pageNumber}";
-            await semaphore.WaitAsync(); // Aguarda uma vaga para executar a tarefa
+            await semaphore.WaitAsync(cancellationTokenSource.Token); // Aguarda uma vaga para executar a tarefa
+
 
             tasks.Add(Task.Run(async () =>
             {
@@ -83,13 +86,15 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Erro ao processar {urlForm}: {ex.Message}");
-                    throw new Exception($"Erro ao processar {urlForm}");
+                    errorOccurred = true;
+                    cancellationTokenSource.Cancel();
                 }
                 finally
                 {
                     semaphore.Release(); // Libera a vaga
+                    
                 }
-            }));
+            }, cancellationTokenSource.Token));
             pageNumber++;
 
             await Task.WhenAny(tasks);
@@ -97,6 +102,11 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
         }
 
         await Task.WhenAll(tasks);
+        if (errorOccurred)
+        {
+            return HandleResult<GetDataEventNotification>(null, ["Erro ao processar a requisição."]);
+        }
+
         var result = await StoreDataEventAsync(startTime, pagesCount, rowsCount, requestKey);
         if (result is null)
         {
@@ -181,7 +191,14 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
 
     internal async Task<string> FetchRenderedHtmlAsync(string url)
     {
-        return await puppeteerService.FetchRenderedHtmlAsync(url) ?? "";
+        try
+        {
+            return await puppeteerService.FetchRenderedHtmlAsync(url) ?? "";
+        }
+        catch (Exception)
+        {
+            return "";
+        }
     }
 
     private Dictionary<string, int> GetIndexes(HtmlNode node)

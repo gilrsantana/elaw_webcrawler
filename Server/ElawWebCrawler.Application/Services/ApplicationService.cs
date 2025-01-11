@@ -9,6 +9,7 @@ using ElawWebCrawler.Domain.Interfaces;
 using ElawWebCrawler.Provider.Azure;
 using HtmlAgilityPack;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
 [assembly: InternalsVisibleTo("ElawWebCrawler.Test")]
@@ -18,7 +19,8 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
     IHtmlFilePersist htmlFilePersist,
     IAzureFileHandler azureFileHandler,
     IConfiguration configuration,
-    IPuppeteerService puppeteerService)
+    IPuppeteerService puppeteerService,
+    ILogger<ApplicationService> logger)
     : BaseService, IApplicationService
 {
     private static readonly ConcurrentBag<ProxyData> ProxyList = new ConcurrentBag<ProxyData>();
@@ -54,19 +56,39 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
         var morePages = true;
         var requestKey = Guid.NewGuid().ToString();
         var errorOccurred = false; 
+        var erroTeste = false;
 
         while (morePages)
         {
             var urlForm = $"{url}/page/{pageNumber}";
             await semaphore.WaitAsync(cancellationTokenSource.Token); // Aguarda uma vaga para executar a tarefa
-
-
+            
             tasks.Add(Task.Run(async () =>
             {
                 try
                 {
+                    logger.LogInformation("Iniciando thread");
+                    // Teste de conectividade
+                    using (var httpClient = new HttpClient())
+                    {
+                        var response = await httpClient.GetAsync("https://www.google.com");
+                        if (!response.IsSuccessStatusCode)
+                        {
+                            erroTeste = true;
+                            Console.WriteLine("Erro de conectividade");
+                            logger.LogInformation("Erro de conectividade");
+                            cancellationTokenSource.Cancel();
+                        }
+                        else
+                        {
+                            erroTeste = false;
+                            System.Console.WriteLine("Conectividade OK");
+                            logger.LogInformation("Conectividade OK");
+                        }
+                    }
                     var proxies = await ExtractProxyDataAsync(urlForm);
                     Console.WriteLine($"Processado: {urlForm}");
+                    logger.LogInformation($"Processado: Página de destino");
                     if (proxies.Count == 0)
                     {
                         morePages = false;
@@ -92,7 +114,7 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
                 finally
                 {
                     semaphore.Release(); // Libera a vaga
-                    
+                    logger.LogInformation("Finalizando thread");
                 }
             }, cancellationTokenSource.Token));
             pageNumber++;
@@ -102,9 +124,15 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
         }
 
         await Task.WhenAll(tasks);
+        logger.LogInformation("Threads finalizadas");
         if (errorOccurred)
         {
             return HandleResult<GetDataEventNotification>(null, ["Erro ao processar a requisição."]);
+        }
+
+        if (erroTeste)
+        {
+            return HandleResult<GetDataEventNotification>(null, ["Erro de conectividade."]);
         }
 
         var result = await StoreDataEventAsync(startTime, pagesCount, rowsCount, requestKey);
@@ -113,6 +141,7 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
             return HandleResult<GetDataEventNotification>(null, ["Erro ao salvar os dados no banco de dados."]);
         }
         var notification = await BuildNotificationAsync(result);
+        logger.LogInformation("Notificação construída");
         return HandleResult(notification);
     }
 

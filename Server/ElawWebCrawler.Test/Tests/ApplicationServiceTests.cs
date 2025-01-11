@@ -6,6 +6,7 @@ using ElawWebCrawler.Application.Services;
 using ElawWebCrawler.Domain.Entities;
 using ElawWebCrawler.Domain.Interfaces;
 using ElawWebCrawler.Provider.Azure;
+using Microsoft.Extensions.Logging;
 using Moq;
 using PuppeteerSharp;
 
@@ -18,6 +19,7 @@ public class ApplicationServiceTests
     private readonly Mock<IAzureFileHandler> _mockAzureFileHandler;
     private readonly Mock<IPuppeteerService> _mockPuppeteerService;
     private readonly Mock<IConfiguration> _mockConfiguration;
+    private readonly Mock<ILogger<ApplicationService>> _mockLogger;
     private readonly ApplicationService _service;
     private const string _url = "https://proxyservers.pro/proxy/list/order/updated/order_dir/desc";
     
@@ -28,12 +30,14 @@ public class ApplicationServiceTests
         _mockHtmlFilePersist = new Mock<IHtmlFilePersist>();
         _mockAzureFileHandler = new Mock<IAzureFileHandler>();
         _mockPuppeteerService = new Mock<IPuppeteerService>();
+        _mockLogger = new Mock<ILogger<ApplicationService>>();
         _service = new ApplicationService(
             _mockEventPersist.Object,
             _mockHtmlFilePersist.Object,
             _mockAzureFileHandler.Object,
             _mockConfiguration.Object,
-            _mockPuppeteerService.Object);
+            _mockPuppeteerService.Object,
+            _mockLogger.Object);
     }
     
     [Fact]

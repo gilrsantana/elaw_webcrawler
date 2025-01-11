@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ElawWebCrawler.Api.Controllers;
@@ -13,6 +9,7 @@ public class TestController(ILogger<TestController> logger)
     [HttpGet]
     public IActionResult TestAsync()
     {
+        Console.WriteLine("TestAsync");
         return Ok($"Api is running. {DateTime.Now}");
     }
 }

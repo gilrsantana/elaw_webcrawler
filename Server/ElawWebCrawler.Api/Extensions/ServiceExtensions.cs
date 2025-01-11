@@ -58,6 +58,10 @@ public static class ServiceExtensions
             options.AllowAnyHeader();
         });
         app.MapControllers();
-        app.Run();
+        app.Run(async context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            await context.Response.WriteAsync("Resource not found.");
+        });
     }
 }

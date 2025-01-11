@@ -1,6 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using ElawWebCrawler.Application.Interfaces;
 using ElawWebCrawler.Application.Services;
+using Microsoft.Extensions.Logging;
 using Moq;
 using PuppeteerSharp;
 
@@ -11,11 +12,13 @@ public class PuppeteerServiceTest
     private readonly PuppeteerService _service;
     private const string _url = "https://proxyservers.pro/proxy/list/order/updated/order_dir/desc";
     private readonly Mock<IPuppeteerService> _mockPuppeteerService;
+    private readonly Mock<ILogger<PuppeteerService>> _mockLogger;
 
     public PuppeteerServiceTest()
     {
         _mockPuppeteerService = new Mock<IPuppeteerService>();
-        _service = new PuppeteerService();
+        _mockLogger = new Mock<ILogger<PuppeteerService>>();
+        _service = new PuppeteerService(_mockLogger.Object);
     }
 
     [Fact]

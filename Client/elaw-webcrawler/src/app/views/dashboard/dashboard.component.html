@@ -1,0 +1,86 @@
+<div class="container p-3">
+    <div class="row">
+        <div class="col-12 col-lg-6 mb-3">
+            <label for="" class="col-form-label col-form-label-sm fw-bold text-secondary">URL de Busca</label>
+            <div class="input-group">
+                <input type="text" class="form-control form-control-sm" [value]="sourceAddress" disabled>
+                <button class="btn btn-sm btn-primary" (click)="search()">Buscar</button>
+            </div>
+        </div>
+    </div>
+    <hr>
+    <div class="row mt-3" *ngIf="proxie.id">
+
+        <h4>Resultado</h4>
+        <div class="row">
+            <div class="col-12 col-lg-4">
+                <label for="" class="col-form-label col-form-label-sm fw-bold text-secondary">Id</label>
+                <div class="input-group">
+                    <input type="text" class="form-control form-control-sm" [value]="proxie.id" disabled>
+                </div>
+            </div>
+            <div class="col-12 col-lg-4">
+                <label for="" class="col-form-label col-form-label-sm fw-bold text-secondary">Chave da requisição</label>
+                <div class="input-group">
+                    <input type="text" class="form-control form-control-sm" [value]="proxie.requestKey" disabled>
+                </div>
+            </div>
+            
+        </div>
+        <div class="row mt-3">
+            <div class="col-12 col-lg-4">
+                <label for="" class="col-form-label col-form-label-sm fw-bold text-secondary">Início</label>
+                <div class="input-group">
+                    <input type="text" class="form-control form-control-sm" [value]="proxie.startDate | date:'dd/MM/yyyy HH:mm:ss'" disabled>
+                </div>
+            </div>
+            <div class="col-12 col-lg-4">
+                <label for="" class="col-form-label col-form-label-sm fw-bold text-secondary">Fim</label>
+                <div class="input-group">
+                    <input type="text" class="form-control form-control-sm" [value]="proxie.endDate | date:'dd/MM/yyyy HH:mm:ss'" disabled>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-12 col-lg-2">
+                <label for="" class="col-form-label col-form-label-sm fw-bold text-secondary">Páginas Consultadas</label>
+                <div class="input-group">
+                    <input type="text" class="form-control form-control-sm" [value]="proxie.page" disabled>
+                </div>
+            </div>
+        
+            <div class="col-12 col-lg-2">
+                <label for="" class="col-form-label col-form-label-sm fw-bold text-secondary">Linhas com resultado</label>
+                <div class="input-group">
+                    <input type="text" class="form-control form-control-sm" [value]="proxie.row" disabled>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-5" *ngIf="proxie.jsonFileAddress">
+            <div class="mx-auto col-12 col-lg-4">
+                <label for="" class="col-form-label col-form-label-sm fw-bold text-secondary">Baixar Arquivo com os dados da consulta</label><br>
+                <button class="btn btn-sm btn-primary col-12" (click)="download(proxie.jsonFileAddress)">Baixar</button>
+            </div>
+
+        </div>
+        
+        <div class="table-responsive mt-5" *ngIf="proxie.pagesUrl.length > 0">
+            <table class="table table-sm table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th class="text-center">Endereço</th>
+                        <th class="text-center">Arquivo Html</th>
+                    </tr>
+                </thead>
+                <tbody >
+                    <tr *ngFor="let p of proxie.pagesUrl">
+                        <td>{{ p.fileUrl }}</td>
+                        <td class="text-center"><button class="btn btn-sm btn-primary" (click)="download(p.fileContentAddress)">Baixar Html</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>

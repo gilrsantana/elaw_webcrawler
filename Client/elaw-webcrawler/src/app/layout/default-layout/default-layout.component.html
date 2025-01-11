@@ -1,0 +1,12 @@
+<div class="d-flex flex-column min-vh-100">
+    <app-default-header/>
+    <div class="body flex-grow-1 px-0 bg-white">
+        <div class="px-5">
+            <router-outlet></router-outlet>
+        </div>
+    </div>
+    <app-default-footer/>
+    <ngx-spinner bdColor="rgba(245,159,66,0.9)" size="medium" color="#fff" type="timer" [fullScreen]="true">
+        <p style="font-size: 20px; color: white">Carregando...</p>
+    </ngx-spinner>
+</div>

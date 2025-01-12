@@ -23,8 +23,8 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
     ILogger<ApplicationService> logger)
     : BaseService, IApplicationService
 {
-    private static readonly ConcurrentBag<ProxyData> ProxyList = new ConcurrentBag<ProxyData>();
-    private SemaphoreSlim? semaphore;
+    private ConcurrentBag<ProxyData> ProxyBag = new ();
+    private SemaphoreSlim? _semaphore;
     private int _maxThreads = 3;
     private readonly string _ipKey = "IP Address";
     private readonly string _portKey = "Port";
@@ -39,7 +39,7 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
         {
             _maxThreads = number > 0 ? number : _maxThreads;
         }
-        semaphore = new SemaphoreSlim(_maxThreads);
+        _semaphore = new SemaphoreSlim(_maxThreads);
 
         if (!IsValidUrl(url))
         {
@@ -51,89 +51,65 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
 
         var tasks = new List<Task>();
         var cancellationTokenSource = new CancellationTokenSource();
+        var cancellationToken = cancellationTokenSource.Token;
 
         var pageNumber = 1;
-        var morePages = true;
         var requestKey = Guid.NewGuid().ToString();
-        var errorOccurred = false; 
-        var erroTeste = false;
-
-        while (morePages)
+        try
         {
-            var urlForm = $"{url}/page/{pageNumber}";
-            await semaphore.WaitAsync(cancellationTokenSource.Token); // Aguarda uma vaga para executar a tarefa
-            
-            tasks.Add(Task.Run(async () =>
+            while (!cancellationToken.IsCancellationRequested)
             {
-                try
+                await _semaphore.WaitAsync(cancellationToken);
+
+                var currentPage = pageNumber++;
+                var urlForm = $"{url}/page/{currentPage}";
+
+                var task = Task.Run(async () =>
                 {
-                    logger.LogInformation("Iniciando thread");
-                    // Teste de conectividade
-                    using (var httpClient = new HttpClient())
+                    try
                     {
-                        var response = await httpClient.GetAsync("https://www.google.com");
-                        if (!response.IsSuccessStatusCode)
-                        {
-                            erroTeste = true;
-                            Console.WriteLine("Erro de conectividade");
-                            logger.LogInformation("Erro de conectividade");
-                            cancellationTokenSource.Cancel();
-                        }
-                        else
-                        {
-                            erroTeste = false;
-                            System.Console.WriteLine("Conectividade OK");
-                            logger.LogInformation("Conectividade OK");
-                        }
+                        logger.LogInformation("Iniciando thread");
+                        await ExtractProxyDataAsync(urlForm, ProxyBag, cancellationToken);
+                        Console.WriteLine($"Processado: {urlForm}");
+                        logger.LogInformation($"Processado: Página de destino");
+                        Interlocked.Increment(ref pagesCount);
+                        Interlocked.Add(ref rowsCount, ProxyBag.Count);
+
+                        await SaveHtmlToFileAsync(urlForm, await FetchRenderedHtmlAsync(urlForm), requestKey);
                     }
-                    var proxies = await ExtractProxyDataAsync(urlForm);
-                    Console.WriteLine($"Processado: {urlForm}");
-                    logger.LogInformation($"Processado: Página de destino");
-                    if (proxies.Count == 0)
+                    catch (OperationCanceledException ex)
                     {
-                        morePages = false;
-                        return;
+                        Console.WriteLine($"Processamento cancelado para a página {currentPage}: {ex.Message}");
+                        logger.LogWarning($"Processamento cancelado para a página");
+                        cancellationTokenSource.Cancel();
                     }
-
-                    foreach (var proxy in proxies)
+                    catch (Exception ex)
                     {
-                        ProxyList.Add(proxy);
+                        logger.LogError("Erro ao processar página");
                     }
+                    finally
+                    {
+                        _semaphore.Release();
+                        logger.LogInformation("Finalizando thread");
+                    }
+                }, cancellationToken);
 
-                    pagesCount++;
-                    rowsCount += proxies.Count;
+                tasks.Add(task);
+                tasks.RemoveAll(t => t.IsCompleted);
+            }
 
-                    await SaveHtmlToFileAsync(urlForm, await FetchRenderedHtmlAsync(urlForm), requestKey);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Erro ao processar {urlForm}: {ex.Message}");
-                    errorOccurred = true;
-                    cancellationTokenSource.Cancel();
-                }
-                finally
-                {
-                    semaphore.Release(); // Libera a vaga
-                    logger.LogInformation("Finalizando thread");
-                }
-            }, cancellationTokenSource.Token));
-            pageNumber++;
-
-            await Task.WhenAny(tasks);
-            tasks.RemoveAll(t => t.IsCompleted);
+            await Task.WhenAll(tasks);
+        }
+        catch (OperationCanceledException)
+        {
+            logger.LogInformation("Processamento cancelado");
+        }
+        finally
+        {
+            _semaphore.Dispose();
         }
 
-        await Task.WhenAll(tasks);
         logger.LogInformation("Threads finalizadas");
-        if (errorOccurred)
-        {
-            return HandleResult<GetDataEventNotification>(null, ["Erro ao processar a requisição."]);
-        }
-
-        if (erroTeste)
-        {
-            return HandleResult<GetDataEventNotification>(null, ["Erro de conectividade."]);
-        }
 
         var result = await StoreDataEventAsync(startTime, pagesCount, rowsCount, requestKey);
         if (result is null)
@@ -173,7 +149,7 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
     internal async Task<GetDataEvent?> StoreDataEventAsync(DateTime startTime, int pagesCount, int rowsCount, string requestKey)
     {
         var endTime = DateTime.Now;
-        var fileUrl = await SaveDataToAzure(ProxyList.ToList());
+        var fileUrl = await SaveDataToAzure(ProxyBag.ToList());
         var dataEvent = new GetDataEvent(startTime, endTime, pagesCount, rowsCount, fileUrl, requestKey);
         return await StoreDataEventToDatabaseAsync(dataEvent);
     }
@@ -184,24 +160,30 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
         return await eventPersist.SaveChangesAsync() ? dataEvent : null;
     }
 
-    internal async Task<List<ProxyData>> ExtractProxyDataAsync(string url)
+    internal async Task ExtractProxyDataAsync(string url, ConcurrentBag<ProxyData> proxyBag, CancellationToken cancellationToken)
     {
+        if (cancellationToken.IsCancellationRequested)
+            return;
+        
         var response = await FetchRenderedHtmlAsync(url);
         if (string.IsNullOrEmpty(response))
-            return [];
+            throw new OperationCanceledException("Nenhum HTML foi retornado.");
+        
         var doc = new HtmlDocument();
         doc.LoadHtml(response);
 
         var rows = doc.DocumentNode.SelectNodes("//table//tr");
         if (rows == null || rows.Count < 2)
-            return [];
+            throw new OperationCanceledException("Nenhuma linha foi encontrada na tabela.");
 
         var indexes = GetIndexes(rows[0]);
         rows.RemoveAt(0);
-        var proxies = new List<ProxyData>();
 
         foreach (var row in rows)
         {
+            if (cancellationToken.IsCancellationRequested)
+                return;
+            
             var columns = row.SelectNodes("td");
             if (columns == null) continue;
 
@@ -212,10 +194,8 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
                 columns[indexes[_countryKey]].InnerText.Trim(),
                 columns[indexes[_protocolKey]].InnerText.Trim()
             );
-            proxies.Add(proxy);
+            proxyBag.Add(proxy);
         }
-
-        return proxies;
     }
 
     internal async Task<string> FetchRenderedHtmlAsync(string url)

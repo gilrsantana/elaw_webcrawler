@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Collections.Concurrent;
+using System.Text;
 using Microsoft.Extensions.Configuration;
 using ElawWebCrawler.Application;
 using ElawWebCrawler.Application.Interfaces;
@@ -144,16 +145,19 @@ public class ApplicationServiceTests
         var htmlContent = $"<html><table><tr><th>IP Address</th><th>Port</th><th>Country</th><th>Protocol</th></tr>" +
                           $"<tr><td>{mockAddress}</td><td>{mockPort}</td><td>{mockCountry}</td><td>{mockProtocol}</td></tr></table></html>";
         _mockPuppeteerService.Setup(p => p.FetchRenderedHtmlAsync(It.IsAny<string>())).ReturnsAsync(htmlContent);
-
+        var proxyBag = new ConcurrentBag<ProxyData>();
+        var cancellationTokenSource = new CancellationTokenSource();
+        var cancellationToken = cancellationTokenSource.Token;
+        
         // Act
-        var proxies = await _service.ExtractProxyDataAsync(_url);
+        await _service.ExtractProxyDataAsync(_url, proxyBag, cancellationToken);
 
         // Assert
-        Assert.Single(proxies);
-        Assert.Equal(mockAddress, proxies[0].IpAddress);
-        Assert.Equal(mockPort, proxies[0].Port);
-        Assert.Equal(mockCountry, proxies[0].Country);
-        Assert.Equal(mockProtocol, proxies[0].Protocol);
+        Assert.Single(proxyBag.ToList());
+        Assert.Equal(mockAddress, proxyBag.ToList()[0].IpAddress);
+        Assert.Equal(mockPort, proxyBag.ToList()[0].Port);
+        Assert.Equal(mockCountry, proxyBag.ToList()[0].Country);
+        Assert.Equal(mockProtocol, proxyBag.ToList()[0].Protocol);
     }
     
     [Fact]

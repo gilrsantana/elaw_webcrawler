@@ -195,4 +195,6 @@ Para melhor interação com a API, foi criado um website utilizando o framework 
 
 Com ele, é possível, além de ver os dados da consulta, baixar os arquivos, tanto o json com os dados como as páginas html consultadas.
 
+Este projeto foi publicado no endereço [App](https://purple-water-0d650a50f.4.azurestaticapps.net/)
+
 ![Visão da Página](./web-page.png)

@@ -104,14 +104,13 @@ public class ApplicationServiceTests
         // Arrange
         var startTime = DateTime.Now;
         var pagesCount = 1;
-        var rowsCount = 1;
         var requestKey = "requestKey";
         _mockAzureFileHandler.Setup(a => a.UploadFileToAzureStaAsync(It.IsAny<byte[]>(), It.IsAny<string>())).ReturnsAsync("fileUrl");
         _mockEventPersist.Setup(e => e.Add(It.IsAny<GetDataEvent>()));
         _mockEventPersist.Setup(e => e.SaveChangesAsync()).ReturnsAsync(true);
 
         // Act
-        var dataEvent = await _service.StoreDataEventAsync(startTime, pagesCount, rowsCount, requestKey);
+        var dataEvent = await _service.StoreDataEventAsync(startTime, pagesCount, requestKey);
 
         // Assert
         Assert.NotNull(dataEvent);

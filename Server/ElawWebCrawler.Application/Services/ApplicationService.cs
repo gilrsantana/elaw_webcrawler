@@ -47,7 +47,6 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
         }
         var startTime = DateTime.Now;
         var pagesCount = 0;
-        var rowsCount = 0;
 
         var tasks = new List<Task>();
         var cancellationTokenSource = new CancellationTokenSource();
@@ -69,13 +68,12 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
                     try
                     {
                         logger.LogInformation("Iniciando thread");
-                        await ExtractProxyDataAsync(urlForm, ProxyBag, cancellationToken);
+                         var htmlContent = await ExtractProxyDataAsync(urlForm, ProxyBag, cancellationToken);
                         Console.WriteLine($"Processado: {urlForm}");
                         logger.LogInformation($"Processado: Página de destino");
                         Interlocked.Increment(ref pagesCount);
-                        Interlocked.Add(ref rowsCount, ProxyBag.Count);
-
-                        await SaveHtmlToFileAsync(urlForm, await FetchRenderedHtmlAsync(urlForm), requestKey);
+                        
+                        await SaveHtmlToFileAsync(urlForm, htmlContent, requestKey);
                     }
                     catch (OperationCanceledException ex)
                     {
@@ -111,7 +109,7 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
 
         logger.LogInformation("Threads finalizadas");
 
-        var result = await StoreDataEventAsync(startTime, pagesCount, rowsCount, requestKey);
+        var result = await StoreDataEventAsync(startTime, pagesCount, requestKey);
         if (result is null)
         {
             return HandleResult<GetDataEventNotification>(null, ["Erro ao salvar os dados no banco de dados."]);
@@ -146,11 +144,11 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
             pagesNotification);
     }
 
-    internal async Task<GetDataEvent?> StoreDataEventAsync(DateTime startTime, int pagesCount, int rowsCount, string requestKey)
+    internal async Task<GetDataEvent?> StoreDataEventAsync(DateTime startTime, int pagesCount, string requestKey)
     {
         var endTime = DateTime.Now;
         var fileUrl = await SaveDataToAzure(ProxyBag.ToList());
-        var dataEvent = new GetDataEvent(startTime, endTime, pagesCount, rowsCount, fileUrl, requestKey);
+        var dataEvent = new GetDataEvent(startTime, endTime, pagesCount, ProxyBag.ToList().Count, fileUrl, requestKey);
         return await StoreDataEventToDatabaseAsync(dataEvent);
     }
 
@@ -160,10 +158,10 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
         return await eventPersist.SaveChangesAsync() ? dataEvent : null;
     }
 
-    internal async Task ExtractProxyDataAsync(string url, ConcurrentBag<ProxyData> proxyBag, CancellationToken cancellationToken)
+    internal async Task<string> ExtractProxyDataAsync(string url, ConcurrentBag<ProxyData> proxyBag, CancellationToken cancellationToken)
     {
         if (cancellationToken.IsCancellationRequested)
-            return;
+            return String.Empty;
         
         var response = await FetchRenderedHtmlAsync(url);
         if (string.IsNullOrEmpty(response))
@@ -182,7 +180,7 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
         foreach (var row in rows)
         {
             if (cancellationToken.IsCancellationRequested)
-                return;
+                return response;
             
             var columns = row.SelectNodes("td");
             if (columns == null) continue;
@@ -196,6 +194,8 @@ public class ApplicationService(IGetDataEventPersist eventPersist,
             );
             proxyBag.Add(proxy);
         }
+
+        return response;
     }
 
     internal async Task<string> FetchRenderedHtmlAsync(string url)

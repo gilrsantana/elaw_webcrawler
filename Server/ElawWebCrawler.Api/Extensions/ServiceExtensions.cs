@@ -2,6 +2,7 @@
 using ElawWebCrawler.Api.Notifications;
 using ElawWebCrawler.Common;
 using Microsoft.AspNetCore.Mvc;
+using Scalar.AspNetCore;
 using Serilog;
 
 namespace ElawWebCrawler.Api.Extensions;
@@ -10,10 +11,9 @@ public static class ServiceExtensions
 {
     public static void ConfigureApiApp(this IServiceCollection service)
     {
-        service.AddOpenApi();
         service.AddControllers()
             .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));;
-        service.AddEndpointsApiExplorer();
+        service.AddOpenApi();
         service.AddCors();
         service.Configure<ApiBehaviorOptions>(options =>
             {
@@ -23,14 +23,14 @@ public static class ServiceExtensions
                         .Where(x => x.Value != null && x.Value.Errors.Any())
                         .SelectMany(x => x.Value.Errors)
                         .Select(x => x.ErrorMessage).ToArray();
-
+        
                     var messages = new List<MessageModel>();
                     foreach (var error in errors)
                     {
                         messages.Add(new MessageModel(error, MessageType.ERROR));
                     }
                     var toReturn = new ResultViewModelApi<string>(messages);
-
+        
                     return new BadRequestObjectResult(toReturn);
                 };
             });
@@ -50,6 +50,7 @@ public static class ServiceExtensions
         if (app.Environment.IsDevelopment())
         {
             app.MapOpenApi();
+            app.MapScalarApiReference();
         }
         app.UseCors(options =>
         {

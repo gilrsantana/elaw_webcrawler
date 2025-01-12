@@ -10,8 +10,8 @@ public class WebCrawlerController(ILogger<WebCrawlerController> logger, IApplica
 {
     [HttpGet]
     [ProducesResponseType(typeof(ResultViewModelApi<WebCrawlerViewModel>), (int)HttpStatusCode.OK)]
-    [ProducesResponseType(typeof(ResultViewModelApi<>), (int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType(typeof(ResultViewModelApi<>), (int)HttpStatusCode.InternalServerError)]
+    [ProducesResponseType(typeof(ResultViewModelApi<object>), (int)HttpStatusCode.BadRequest)]
+    [ProducesResponseType(typeof(ResultViewModelApi<object>), (int)HttpStatusCode.InternalServerError)]
     public async Task<IActionResult> GetDataAsync([FromQuery] string url)
     {
         try

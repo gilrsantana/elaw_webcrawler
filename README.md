@@ -52,7 +52,7 @@ O **Azure Storage Account** armazena os arquivos **html** das páginas consultad
     <li>Utilização da classe <b>ConcurrentBag< T ></></b> como estratégia <b>thread-safe</b> para gerenciar a lista que coleta os dados trabalhados em diferentes threads</li><br>
 </ol>
 
-## Como executar o projeto BackEnd
+## Como executar o projeto BackEnd - .Net localmente
 
 <ol>
 <li>Clonar o repositório e acessar a pasta Server</li><br>
@@ -113,33 +113,33 @@ A API traz como resposta os dados da requisição e os endereços para download 
 ```
 {
   "viewData": {
-    "id": "01945053-a5c0-76fe-bbaa-35d826555895",
-    "startDate": "2025-01-10T13:07:09.9681023+00:00",
-    "endDate": "2025-01-10T13:07:24.8043452+00:00",
+    "id": "01945a9d-99ec-7c97-9ee2-880e54acc146",
+    "startDate": "2025-01-12T09:59:08.2180809-03:00",
+    "endDate": "2025-01-12T10:04:25.554458-03:00",
     "page": 5,
-    "row": 82,
-    "requestKey": "99e18870-80b1-47b9-bee8-1abcd5723fdb",
-    "jsonFileAddress": "https://staelawpaygo.blob.core.windows.net/files/json-files/proxies_fd1fd5e9-527c-4af9-9b9e-66ad75b9664b.json",
+    "row": 292,
+    "requestKey": "08230a32-e6a8-45f3-b647-f953475e16fa",
+    "jsonFileAddress": "https://staelawpaygo.blob.core.windows.net/files/json-files/proxies_3d4b6b5e-c099-4ac5-9ff5-c324de95fdb1.json",
     "pagesUrl": [
       {
         "fileUrl": "https://proxyservers.pro/proxy/list/order/updated/order_dir/desc/page/1",
-        "fileContentAddress": "https://staelawpaygo.blob.core.windows.net/files/html-files/page_-57326983.html"
+        "fileContentAddress": "https://staelawpaygo.blob.core.windows.net/files/html-files/page_ede4891d-0c0e-4d03-949f-afc10b2facf5.html"
       },
       {
         "fileUrl": "https://proxyservers.pro/proxy/list/order/updated/order_dir/desc/page/2",
-        "fileContentAddress": "https://staelawpaygo.blob.core.windows.net/files/html-files/page_-1275616698.html"
+        "fileContentAddress": "https://staelawpaygo.blob.core.windows.net/files/html-files/page_3af6fa99-9d56-40ea-b980-e4dac8f9b165.html"
       },
       {
         "fileUrl": "https://proxyservers.pro/proxy/list/order/updated/order_dir/desc/page/3",
-        "fileContentAddress": "https://staelawpaygo.blob.core.windows.net/files/html-files/page_1857298309.html"
+        "fileContentAddress": "https://staelawpaygo.blob.core.windows.net/files/html-files/page_5173140a-b73b-49c8-a5cc-a37759dabd37.html"
       },
       {
         "fileUrl": "https://proxyservers.pro/proxy/list/order/updated/order_dir/desc/page/4",
-        "fileContentAddress": "https://staelawpaygo.blob.core.windows.net/files/html-files/page_-1134781680.html"
+        "fileContentAddress": "https://staelawpaygo.blob.core.windows.net/files/html-files/page_cafd0c05-34c1-4eef-9188-6d4f33d686d1.html"
       },
       {
         "fileUrl": "https://proxyservers.pro/proxy/list/order/updated/order_dir/desc/page/5",
-        "fileContentAddress": "https://staelawpaygo.blob.core.windows.net/files/html-files/page_-872532113.html"
+        "fileContentAddress": "https://staelawpaygo.blob.core.windows.net/files/html-files/page_c463b589-828d-463d-8682-bf3cb94e625a.html"
       }
     ]
   },
@@ -147,9 +147,9 @@ A API traz como resposta os dados da requisição e os endereços para download 
 }
 ```
 
-Estruturalmente, o objeto retornado pela API possui duas propriedades: **viewData** e **messages**. 
+Estruturalmente, o objeto retornado pela API possui duas propriedades: **viewData** e **messages**.
 
-**ViewData** é um objeto genérico que traz o conteúdo da requisição em caso de sucesso. 
+**ViewData** é um objeto genérico que traz o conteúdo da requisição em caso de sucesso.
 
 Já a propriedade **messages** traz um array com objeto de erro que possui as propriedades **message** (string) com o texto do erro na requisição e **type** (string) com o tipo do erro, podendo ser: **INFORMATION**, **WARNING**, **ERROR** e **CRITICAL_ERROR**
 
@@ -191,10 +191,22 @@ O repositório do projeto está configurado para que os commits realizados na br
 
 ## Cliente FrontEnd - Angular
 
-Para melhor interação com a API, foi criado um website utilizando o framework Angular na versão 19. Este Projeto faz as requisições para a API e obtem os dados de resposta em tela. 
+Para melhor interação com a API, foi criado um website utilizando o framework Angular na versão 19. Este Projeto faz as requisições para a API e obtem os dados de resposta em tela.
 
 Com ele, é possível, além de ver os dados da consulta, baixar os arquivos, tanto o json com os dados como as páginas html consultadas.
 
 Este projeto foi publicado no endereço [App](https://purple-water-0d650a50f.4.azurestaticapps.net/)
 
 ![Visão da Página](./web-page.png)
+
+## Executar o projeto Frontend - Angular localmente
+
+Este projeto foi gerado utilizando [Angular CLI](https://github.com/angular/angular-cli) versão 19.0.7. Para sua execução é preciso ter instalada a ferramenta **angular/cli**, **npm** e o **Node**. Caso não atenha instalado em seu ambiente, instale estas dependências primariamente.
+
+Para executar o projeto localmente, navegue até a pasta Client/elaw-webcrawler e execute o comando `ng serve -o`. 
+
+Será aberto o navegador no endereço `http://localhost:4200/`
+
+Dentro da pasta `src` do projeto há a pasta `environments`. Nela há dois arquivos de configuração. Nestes arquivos é definido o apontamento do endereço da API que o projeto se comunicará.
+
+Inicialmente, o arquivo de desenvolvimento já está definido o endereço de execução da API Backend deste projeto, mas caso haja necessidade, neste arquivo é que deverá ser feita a modificação.

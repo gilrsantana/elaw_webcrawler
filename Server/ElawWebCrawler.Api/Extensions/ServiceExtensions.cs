@@ -50,7 +50,13 @@ public static class ServiceExtensions
         if (app.Environment.IsDevelopment())
         {
             app.MapOpenApi();
-            app.MapScalarApiReference();
+            app.MapScalarApiReference(options =>
+            {
+                options
+                    .WithTitle("Elaw Web Crawler API")
+                    .WithTheme(ScalarTheme.Mars)
+                    .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+            });
         }
         app.UseCors(options =>
         {
